@@ -21,18 +21,25 @@ class SymbolScanner
   attr_reader :symbol, :token
 end
 
-class TextScanner
-  TEXT_PATTERN = /^([^*_\n]+)(.*)/.freeze
+class RegexScanner
+  def initialize(regex, token_class)
+    @regex = regex
+    @token_class = token_class
+  end
 
-  def self.consume(text)
-    match = TEXT_PATTERN.match(text)
+  def consume(text)
+    match = regex.match(text)
     return [nil, text] unless match
 
-    token = TextToken.new(match[1])
+    token = token_class.new(match[1])
     the_rest = match[2]
 
     [token, the_rest]
   end
+
+  private
+
+  attr_reader :regex, :token_class
 end
 
 class Tokenizer
@@ -41,7 +48,7 @@ class Tokenizer
       SymbolScanner.new('_', :underscore),
       SymbolScanner.new('*', :star),
       SymbolScanner.new("\n", :newline),
-      TextScanner
+      RegexScanner.new(/\A([^*_\n]+)(.*)/, TextToken)
     ]
   end
 
