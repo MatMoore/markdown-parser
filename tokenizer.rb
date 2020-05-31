@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'pry'
-
 TextToken = Struct.new(:text)
 
 class SymbolScanner
@@ -24,14 +22,16 @@ class SymbolScanner
 end
 
 class TextScanner
+  TEXT_PATTERN = /^([^*_\n]+)(.*)/.freeze
+
   def self.consume(text)
-    symbols = /[*_\n]/
-    return [null, text] if text.empty? || symbols =~ text[0]
+    match = TEXT_PATTERN.match(text)
+    return [nil, text] unless match
 
-    first_symbol = text.index(symbols)
-    token = TextToken.new(text[0...first_symbol])
+    token = TextToken.new(match[1])
+    the_rest = match[2]
 
-    [token, text[first_symbol..]]
+    [token, the_rest]
   end
 end
 
