@@ -28,11 +28,11 @@ class RegexScanner
   end
 
   def consume(text)
-    match = regex.match(text)
+    match = regex.match(text)[1]
     return [nil, text] unless match
 
-    token = token_class.new(match[1])
-    the_rest = match[2]
+    token = token_class.new(match)
+    the_rest = text[match.length..]
 
     [token, the_rest]
   end
@@ -48,7 +48,7 @@ class Tokenizer
       SymbolScanner.new('_', :underscore),
       SymbolScanner.new('*', :star),
       SymbolScanner.new("\n", :newline),
-      RegexScanner.new(/\A([^*_\n]+)(.*)/, TextToken)
+      RegexScanner.new(/\A([^*_\n]+)/, TextToken)
     ]
   end
 
