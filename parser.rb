@@ -31,3 +31,34 @@ class BodyParser
         BodyNode.new([], 0)
     end
 end
+
+class TextParser
+    def match(tokens)
+        return nil unless tokens.first.is_a?(TextToken)
+
+        TextNode.new(value: tokens.first.text, consumed: 1)
+    end
+end
+
+module TokenMatcher
+    STAR       = ->(t) { t == :star }
+    UNDERSCORE = ->(t) { t == :underscore }
+    TEXT       = ->(t) { t.is_a?(TextToken) }
+
+    def tokens_match_pattern?(tokens, pattern)
+        pattern.zip(tokens).all? { |predicate, token| predicate.call(token) }
+    end
+end
+
+class BoldTextParser
+    include TokenMatcher
+
+    def match(tokens)
+        underscore_pattern = [UNDERSCORE, UNDERSCORE, TEXT, UNDERSCORE, UNDERSCORE]
+        star_pattern = [STAR, STAR, TEXT, STAR, STAR]
+
+        if tokens_match_pattern?(tokens, underscore_pattern) || tokens_match_pattern?(tokens, star_pattern)
+           BoldTextNode.new(value: tokens[2].text, consumed: 5)
+        end
+    end
+end

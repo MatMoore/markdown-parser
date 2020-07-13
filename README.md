@@ -1,6 +1,6 @@
 # Markdown parser
 
-A home made artisan markdown parser
+A home made artisanal markdown parser
 
 # References
 
