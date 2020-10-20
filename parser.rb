@@ -61,3 +61,23 @@ class BoldTextParser
         end
     end
 end
+
+class EmphasisedTextParser
+    def match(tokens)
+        underscore_pattern = PatternBuilder.new
+            .underscore
+            .text
+            .underscore
+
+        star_pattern = PatternBuilder.new
+            .star
+            .text
+            .star
+
+        if underscore_pattern.matches?(tokens) || star_pattern.matches?(tokens)
+           EmphasisedTextNode.new(value: tokens[1].text, consumed: 3)
+        end
+    end
+end
+
+## TODO: add emphasis, paragraph, sentence + eof, sentence + newline

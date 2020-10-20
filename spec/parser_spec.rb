@@ -38,6 +38,20 @@ RSpec.describe(BoldTextParser) do
     end
 end
 
+RSpec.describe(EmphasisedTextParser) do
+    subject { EmphasisedTextParser.new }
+
+    it "matches *TEXT*" do
+        tokens = [:star, TextToken.new('hello'), :star]
+        expect(subject.match(tokens)).to eq(EmphasisedTextNode.new(value: 'hello', consumed: 3))
+    end
+
+    it "matches _TEXT_" do
+        tokens = [:underscore, TextToken.new('hello'), :underscore]
+        expect(subject.match(tokens)).to eq(EmphasisedTextNode.new(value: 'hello', consumed: 3))
+    end
+end
+
 RSpec.describe(Parser) do
     subject { Parser.new }
 
