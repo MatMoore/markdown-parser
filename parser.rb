@@ -40,24 +40,23 @@ class TextParser
     end
 end
 
-module TokenMatcher
-    STAR       = ->(t) { t == :star }
-    UNDERSCORE = ->(t) { t == :underscore }
-    TEXT       = ->(t) { t.is_a?(TextToken) }
-
-    def tokens_match_pattern?(tokens, pattern)
-        pattern.zip(tokens).all? { |predicate, token| predicate.call(token) }
-    end
-end
-
 class BoldTextParser
-    include TokenMatcher
-
     def match(tokens)
-        underscore_pattern = [UNDERSCORE, UNDERSCORE, TEXT, UNDERSCORE, UNDERSCORE]
-        star_pattern = [STAR, STAR, TEXT, STAR, STAR]
+        underscore_pattern = PatternBuilder.new
+            .underscore
+            .underscore
+            .text
+            .underscore
+            .underscore
 
-        if tokens_match_pattern?(tokens, underscore_pattern) || tokens_match_pattern?(tokens, star_pattern)
+        star_pattern = PatternBuilder.new
+            .star
+            .star
+            .text
+            .star
+            .star
+
+        if underscore_pattern.matches?(tokens) || star_pattern.matches?(tokens)
            BoldTextNode.new(value: tokens[2].text, consumed: 5)
         end
     end

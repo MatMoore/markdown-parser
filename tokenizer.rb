@@ -77,3 +77,32 @@ class Tokenizer
 
   attr_reader :scanners
 end
+
+class PatternBuilder
+  STAR       = ->(t) { t == :star }
+  UNDERSCORE = ->(t) { t == :underscore }
+  TEXT       = ->(t) { t.is_a?(TextToken) }
+
+  def initialize(matchers = [])
+      @matchers = matchers
+  end
+
+  def matches?(tokens)
+      @matchers.zip(tokens).all? { |matcher, token| matcher.call(token) }
+  end
+
+  def star
+      @matchers << STAR
+      self
+  end
+
+  def underscore
+      @matchers << UNDERSCORE
+      self
+  end
+
+  def text
+      @matchers << TEXT
+      self
+  end
+end
