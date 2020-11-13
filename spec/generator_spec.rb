@@ -38,5 +38,39 @@ RSpec.describe(Generator) do
 
             expect(stream.string).to eq("hello world\n")
         end
+
+        it "handles paragraph breaks" do
+            hello = TextNode.new(value: "hello")
+            world = TextNode.new(value: "world")
+            paragraph = ParagraphNode.new(sentences: [hello])
+            another_paragraph = ParagraphNode.new(sentences: [world])
+            ast = BodyNode.new(paragraphs: [paragraph, another_paragraph])     
+
+            generator.generate(ast)
+
+            expect(stream.string).to eq("hello\n\nworld\n")
+        end
+
+        it "handles bold text" do
+            hello = BoldTextNode.new(value: "hello")
+            world = TextNode.new(value: " world")
+            paragraph = ParagraphNode.new(sentences: [hello, world])
+            ast = BodyNode.new(paragraphs: [paragraph])     
+
+            generator.generate(ast)
+
+            expect(stream.string).to eq("\u001b[1mhello\u001b[0m world\n")
+        end
+
+        it "handles emphasised text" do
+            hello = TextNode.new(value: "hello ")
+            world = EmphasisedTextNode.new(value: "world")
+            paragraph = ParagraphNode.new(sentences: [hello, world])
+            ast = BodyNode.new(paragraphs: [paragraph])     
+
+            generator.generate(ast)
+
+            expect(stream.string).to eq("hello \u001b[7mworld\u001b[0m\n")
+        end
     end
 end

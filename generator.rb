@@ -58,10 +58,28 @@ end
 class ConsoleOutput
     def initialize(stream)
         @stream = stream
+        @first_paragraph = true
+    end
+
+    def enter_paragraph(node)
+        stream.puts "\n" unless @first_paragraph
+    end
+
+    def exit_paragraph(node)
+        stream.puts "\n"
+        @first_paragraph = false
     end
 
     def visit_text(node)
-         stream.puts node.value
+         stream.write node.value
+    end
+
+    def visit_bold(node)
+        stream.write "\u001b[1m" + node.value + "\u001b[0m"
+    end
+
+    def visit_emphasised(node)
+        stream.write "\u001b[7m" + node.value + "\u001b[0m"
     end
 
     private
