@@ -3,7 +3,6 @@ require_relative 'tokenizer'
 TextNode = Struct.new(:value, :consumed, keyword_init: true)
 BoldTextNode = Struct.new(:value, :consumed, keyword_init: true)
 EmphasisedTextNode = Struct.new(:value, :consumed, keyword_init: true)
-NewlineNode = Struct.new(:value, :consumed, keyword_init: true)
 ParagraphNode = Struct.new(:sentences, :consumed, keyword_init: true)
 BodyNode = Struct.new(:paragraphs, :consumed, keyword_init: true)
 
