@@ -1,6 +1,12 @@
 # Markdown parser
 
-A home made artisanal markdown parser
+A home made artisanal markdown parser.
+
+This parses a very small subset of markdown. It can generate formatted text in a console, using ANSI escape sequences.
+
+# Usage
+
+`ruby markdown_parser.rb < example.md`
 
 # References
 

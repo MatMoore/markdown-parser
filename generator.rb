@@ -56,7 +56,7 @@ private
 end
 
 class ConsoleOutput
-    def initialize(stream)
+    def initialize(stream: STDOUT)
         @stream = stream
         @first_paragraph = true
     end
