@@ -15,7 +15,7 @@ class Parser
 
     def parse(document)
         tokens = tokenizer.tokenize(document)
-        body = body_parser.match(tokens)
+        body = body_parser.parse(tokens)
 
         raise "Syntax error: #{tokens[body.consumed]}" unless tokens.count == body.consumed
 
@@ -30,11 +30,11 @@ end
 
 class BodyParser
     def initialize
-        @many_paragraph_parser = MatchMany.new(ParagraphParser.new)
+        @many_paragraph_parser = ParseMany.new(ParagraphParser.new)
     end
 
-    def match(tokens)
-        paragraphs = many_paragraph_parser.match_many(tokens)
+    def parse(tokens)
+        paragraphs = many_paragraph_parser.parse_many(tokens)
         return nil if paragraphs.empty?
 
         BodyNode.new(paragraphs: paragraphs, consumed: paragraphs.map(&:consumed).sum)
@@ -46,7 +46,7 @@ class BodyParser
 end
 
 class TextParser
-    def match(tokens)
+    def parse(tokens)
         return nil unless tokens.first.is_a?(TextToken)
 
         TextNode.new(value: tokens.first.text, consumed: 1)
@@ -54,7 +54,7 @@ class TextParser
 end
 
 class BoldTextParser
-    def match(tokens)
+    def parse(tokens)
         underscore_pattern = PatternBuilder.new
             .underscore
             .underscore
@@ -76,7 +76,7 @@ class BoldTextParser
 end
 
 class EmphasisedTextParser
-    def match(tokens)
+    def parse(tokens)
         underscore_pattern = PatternBuilder.new
             .underscore
             .text
@@ -100,11 +100,11 @@ class SentenceParser
         bold_text_parser = BoldTextParser.new
         emphasised_text_parser = EmphasisedTextParser.new
         
-        @subparsers = MatchFirst.new([emphasised_text_parser, bold_text_parser, text_parser])
+        @subparsers = ParseFirst.new([emphasised_text_parser, bold_text_parser, text_parser])
     end
 
-    def match(tokens)
-        subparsers.match(tokens)
+    def parse(tokens)
+        subparsers.parse(tokens)
     end
 
     private
@@ -114,11 +114,11 @@ end
 
 class ParagraphParser
     def initialize      
-        @subparsers = MatchFirst.new([SentenceAndEOFParser.new, SentenceAndNewLineParser.new])
+        @subparsers = ParseFirst.new([SentenceAndEOFParser.new, SentenceAndNewLineParser.new])
     end
 
-    def match(tokens)
-        subparsers.match(tokens)
+    def parse(tokens)
+        subparsers.parse(tokens)
     end
 
     private
@@ -126,25 +126,25 @@ class ParagraphParser
     attr_reader :subparsers
 end
 
-class MatchMany
+class ParseMany
     def initialize(parser)
         @parser = parser
     end
 
-    def match_many(tokens)
-        matches = []
+    def parse_many(tokens)
+        nodes = []
         offset = 0
         length = tokens.length
 
         loop do
-            match = parser.match(tokens[offset..])
-            return matches if match.nil?
+            node = parser.parse(tokens[offset..])
+            return nodes if node.nil?
 
-            matches << match
-            offset += match.consumed
+            nodes << node
+            offset += node.consumed
         end
 
-        return matches
+        return nodes
     end
 
     private
@@ -152,16 +152,16 @@ class MatchMany
     attr_reader :parser
 end
 
-class MatchFirst
+class ParseFirst
     def initialize(subparsers)
         @subparsers = subparsers
     end
 
-    def match(tokens)
+    def parse(tokens)
         subparsers.each do |subparser|
-            match = subparser.match(tokens)
+            node = subparser.parse(tokens)
 
-            return match unless match.nil?
+            return node unless node.nil?
         end
 
         nil
@@ -176,11 +176,11 @@ end
 # Bit weird that this returns a ParagraphNode rather than being a seperate node in the parse tree
 class SentenceAndNewLineParser
     def initialize
-        @many_sentence_parser = MatchMany.new(SentenceParser.new)
+        @many_sentence_parser = ParseMany.new(SentenceParser.new)
     end
 
-    def match(tokens)
-        sentences = many_sentence_parser.match_many(tokens)
+    def parse(tokens)
+        sentences = many_sentence_parser.parse_many(tokens)
         consumed = sentences.map(&:consumed).sum
         remaining = tokens[consumed...]
 
@@ -198,11 +198,11 @@ end
 
 class SentenceAndEOFParser
     def initialize
-        @many_sentence_parser = MatchMany.new(SentenceParser.new)
+        @many_sentence_parser = ParseMany.new(SentenceParser.new)
     end
 
-    def match(tokens)
-        sentences = many_sentence_parser.match_many(tokens)
+    def parse(tokens)
+        sentences = many_sentence_parser.parse_many(tokens)
         consumed = sentences.map(&:consumed).sum
         remaining = tokens[consumed...]
 

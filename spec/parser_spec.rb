@@ -8,79 +8,79 @@ require_relative '../tokenizer'
 RSpec.describe(TextParser) do
     subject { TextParser.new }
 
-    it "matches a text token" do
+    it "parsees a text token" do
         tokens = [TextToken.new('hello')]
-        expect(subject.match(tokens)).to eq(TextNode.new(value: 'hello', consumed: 1))
+        expect(subject.parse(tokens)).to eq(TextNode.new(value: 'hello', consumed: 1))
     end
 
-    it "doesn't match an underscore token" do
+    it "doesn't parse an underscore token" do
         tokens = [:underscore, TextToken.new('hello')]
-        expect(subject.match(tokens)).to be_nil
+        expect(subject.parse(tokens)).to be_nil
     end
 end
 
 RSpec.describe(BoldTextParser) do
     subject { BoldTextParser.new }
 
-    it "matches **TEXT**" do
+    it "parsees **TEXT**" do
         tokens = [:star, :star, TextToken.new('hello'), :star, :star]
-        expect(subject.match(tokens)).to eq(BoldTextNode.new(value: 'hello', consumed: 5))
+        expect(subject.parse(tokens)).to eq(BoldTextNode.new(value: 'hello', consumed: 5))
     end
 
-    it "matches __TEXT__" do
+    it "parsees __TEXT__" do
         tokens = [:underscore, :underscore, TextToken.new('hello'), :underscore, :underscore]
-        expect(subject.match(tokens)).to eq(BoldTextNode.new(value: 'hello', consumed: 5))
+        expect(subject.parse(tokens)).to eq(BoldTextNode.new(value: 'hello', consumed: 5))
     end
 
-    it "doesn't match _TEXT_" do
+    it "doesn't parse _TEXT_" do
         tokens = [:underscore, TextToken.new('hello'), :underscore]
-        expect(subject.match(tokens)).to be_nil
+        expect(subject.parse(tokens)).to be_nil
     end
 end
 
 RSpec.describe(EmphasisedTextParser) do
     subject { EmphasisedTextParser.new }
 
-    it "matches *TEXT*" do
+    it "parsees *TEXT*" do
         tokens = [:star, TextToken.new('hello'), :star]
-        expect(subject.match(tokens)).to eq(EmphasisedTextNode.new(value: 'hello', consumed: 3))
+        expect(subject.parse(tokens)).to eq(EmphasisedTextNode.new(value: 'hello', consumed: 3))
     end
 
-    it "matches _TEXT_" do
+    it "parsees _TEXT_" do
         tokens = [:underscore, TextToken.new('hello'), :underscore]
-        expect(subject.match(tokens)).to eq(EmphasisedTextNode.new(value: 'hello', consumed: 3))
+        expect(subject.parse(tokens)).to eq(EmphasisedTextNode.new(value: 'hello', consumed: 3))
     end
 end
 
 RSpec.describe(SentenceParser) do
     subject { SentenceParser.new }
     
-    it "matches **TEXT**" do
+    it "parsees **TEXT**" do
         tokens = [:star, :star, TextToken.new('hello'), :star, :star]
         bolded = BoldTextNode.new(value: 'hello', consumed: 5)
 
-        expect(subject.match(tokens)).to eq(bolded)
+        expect(subject.parse(tokens)).to eq(bolded)
     end
 
-    it "matches __TEXT__" do
+    it "parsees __TEXT__" do
         tokens = [:underscore, TextToken.new('hello'), :underscore]
         emphasised = EmphasisedTextNode.new(value: 'hello', consumed: 3)
 
-        expect(subject.match(tokens)).to eq(emphasised)
+        expect(subject.parse(tokens)).to eq(emphasised)
     end
 
-    it "matches TEXT" do
+    it "parsees TEXT" do
         tokens = [TextToken.new('hello')]
         text = TextNode.new(value: 'hello', consumed: 1)
 
-        expect(subject.match(tokens)).to eq(text)
+        expect(subject.parse(tokens)).to eq(text)
     end
 
-    it "matches only the part that can be recognised by a single parser" do
+    it "parsees only the part that can be recognised by a single parser" do
         tokens = [TextToken.new('hello'), :underscore, TextToken.new('hello'), :underscore]
         text = TextNode.new(value: 'hello', consumed: 1)
 
-        expect(subject.match(tokens)).to eq(text)
+        expect(subject.parse(tokens)).to eq(text)
     end
 end
 
@@ -91,14 +91,14 @@ RSpec.describe(SentenceAndNewLineParser) do
         tokens = [TextToken.new('hello'), :newline]
         
         text_node = TextNode.new(value: 'hello', consumed: 1)
-        expect(subject.match(tokens)).to be_nil
+        expect(subject.parse(tokens)).to be_nil
     end
 
     it "parses TEXT\n\n" do
         tokens = [TextToken.new('hello'), :newline, :newline]
         
         text_node = TextNode.new(value: 'hello', consumed: 1)
-        expect(subject.match(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
+        expect(subject.parse(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
     end
 
     it "parses multiple sentences" do
@@ -106,21 +106,21 @@ RSpec.describe(SentenceAndNewLineParser) do
         
         hello = TextNode.new(value: 'hello', consumed: 1)
         world = EmphasisedTextNode.new(value: 'world', consumed: 3)
-        expect(subject.match(tokens)).to eq(ParagraphNode.new(sentences: [hello, world], consumed: 6))
+        expect(subject.parse(tokens)).to eq(ParagraphNode.new(sentences: [hello, world], consumed: 6))
     end
 
     it "stops at a pair of newlines" do
         tokens = [TextToken.new('hello'), :newline, :newline, TextToken.new('world'), :newline]
 
         text_node = TextNode.new(value: 'hello', consumed: 1)
-        expect(subject.match(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
+        expect(subject.parse(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
     end
 
     it "doesn't consumes more than 2 newlines" do
         tokens = [TextToken.new('hello'), :newline, :newline, :newline]
 
         text_node = TextNode.new(value: 'hello', consumed: 1)
-        expect(subject.match(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
+        expect(subject.parse(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
     end
 end
 
@@ -131,14 +131,14 @@ RSpec.describe(SentenceAndEOFParser) do
         tokens = [TextToken.new('hello'), :end_of_file]
         
         text_node = TextNode.new(value: 'hello', consumed: 1)
-        expect(subject.match(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 2))
+        expect(subject.parse(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 2))
     end
 
     it "parses a sentence with a newline at the end of the file" do
         tokens = [TextToken.new('hello'), :newline, :end_of_file]
         
         text_node = TextNode.new(value: 'hello', consumed: 1)
-        expect(subject.match(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
+        expect(subject.parse(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
     end
 end
 
@@ -149,14 +149,14 @@ RSpec.describe(ParagraphParser) do
         tokens = [TextToken.new('hello'), :end_of_file]
         
         text_node = TextNode.new(value: 'hello', consumed: 1)
-        expect(subject.match(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 2))
+        expect(subject.parse(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 2))
     end
 
     it "parses a paragraph in the middle of the file" do
         tokens = [TextToken.new('hello'), :newline, :newline, TextToken.new('world')]
         
         text_node = TextNode.new(value: 'hello', consumed: 1)
-        expect(subject.match(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
+        expect(subject.parse(tokens)).to eq(ParagraphNode.new(sentences: [text_node], consumed: 3))
     end
 end
 
@@ -170,7 +170,7 @@ RSpec.describe(BodyParser) do
         paragraph_node = ParagraphNode.new(sentences: [text_node], consumed: 2)
         body_node = BodyNode.new(paragraphs: [paragraph_node], consumed: 2)
 
-        expect(subject.match(tokens)).to eq(body_node)
+        expect(subject.parse(tokens)).to eq(body_node)
     end
 
     it "parses multiple paragraphs" do
@@ -182,7 +182,7 @@ RSpec.describe(BodyParser) do
         second_para_node = ParagraphNode.new(sentences: [world_node], consumed: 3)
         body_node = BodyNode.new(paragraphs: [first_para_node, second_para_node], consumed: 6)
 
-        expect(subject.match(tokens)).to eq(body_node)
+        expect(subject.parse(tokens)).to eq(body_node)
     end
 end
 
